@@ -1,0 +1,1 @@
+"node_modules/"  "dist/"  rm -r --cached node_modules distgit add .gitignore package.jsongit commit -m "fix: clean repo and run vite via node"git push

@@ -1,7 +1,26 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import api from '../lib/api'
 
 export default function Home() {
+  const [stats, setStats] = useState({
+    activeUsers: 0,
+    assessments: 0,
+    content: 0,
+    satisfaction: '0%'
+  })
+
+  useEffect(() => {
+    api.get('/api/stats')
+      .then(res => setStats(res.data))
+      .catch(() => setStats({
+        activeUsers: 0,
+        assessments: 0,
+        content: 0,
+        satisfaction: '0%'
+      }))
+  }, [])
+
   return (
     <div className="text-center">
       <header className="py-16 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-2xl shadow-lg">
@@ -24,6 +43,24 @@ export default function Home() {
             <p className="text-gray-600">{item.desc}</p>
           </div>
         ))}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-2xl font-bold text-purple-700 mb-6">آمار پلتفرم</h2>
+        <div className="grid md:grid-cols-4 gap-6">
+          {[
+            { title: 'کاربران فعال', value: stats.activeUsers, emoji: '👥' },
+            { title: 'ارزیابی‌ها', value: stats.assessments, emoji: '📊' },
+            { title: 'محتوا', value: stats.content, emoji: '📚' },
+            { title: 'رضایت', value: stats.satisfaction, emoji: '😊' }
+          ].map((stat, index) => (
+            <div key={index} className="bg-white p-6 rounded-xl shadow hover:shadow-xl transition text-center">
+              <div className="text-3xl mb-2">{stat.emoji}</div>
+              <h3 className="text-lg font-bold text-purple-600">{stat.title}</h3>
+              <p className="text-gray-600 text-xl">{stat.value}</p>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   )

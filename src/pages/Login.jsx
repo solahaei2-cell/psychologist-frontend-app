@@ -15,8 +15,13 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await api.post('/api/auth/login', form)
-      localStorage.setItem('token', res.data.token)
+      const res = await api.post('/api/auth/login', { email: form.email, password: form.password })
+      const token = res.data.token
+      if (form.remember) {
+        localStorage.setItem('token', token) // دائمی
+      } else {
+        sessionStorage.setItem('token', token) // موقت تا بستن مرورگر
+      }
       navigate('/dashboard')
     } catch {
       setError('ایمیل یا رمز عبور اشتباه است')

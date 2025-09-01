@@ -1,12 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Vazirmatn, ui-sans-serif, system-ui;
-}
-
-body {
-  background: #0b1020;
-  color: #eaeaf3;
-}
+body { font-family: 'Vazir', sans-serif; }

@@ -26,17 +26,25 @@ export default function Consultation() {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       })
       setMsg("✅ درخواست با موفقیت ثبت شد")
+      setForm({ type: "", date: "", time: "", description: "" }) // ریست فرم
     } catch {
       setMsg("❌ خطا در ارسال درخواست")
     }
   }
+
+  const tariffs = [
+    { type: "مشاوره عمومی", price: "۱۰۰,۰۰۰ تومان" },
+    { type: "درمان تخصصی", price: "۱۵۰,۰۰۰ تومان" },
+    { type: "ارزیابی تشخیصی", price: "۱۲۰,۰۰۰ تومان" },
+    { type: "اورژانس", price: "۲۰۰,۰۰۰ تومان" },
+    { type: "پیگیری", price: "۸۰,۰۰۰ تومان" }
+  ]
 
   return (
     <div className="max-w-lg mx-auto bg-white p-6 rounded-xl shadow">
       <h2 className="text-2xl font-bold text-purple-700 mb-4">درخواست مشاوره آنلاین</h2>
       {msg && <p className="mb-3 text-center">{msg}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
-        
         {/* نوع جلسه */}
         <select
           name="type"
@@ -92,6 +100,26 @@ export default function Consultation() {
           <li>صرفه‌جویی در زمان و هزینه</li>
           <li>امکان پیگیری جلسات</li>
         </ul>
+      </div>
+
+      <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+        <h3 className="font-bold text-blue-700 mb-2">تعرفه جلسات</h3>
+        <table className="w-full text-sm text-gray-600">
+          <thead>
+            <tr className="bg-blue-100">
+              <th className="p-2 text-right">نوع جلسه</th>
+              <th className="p-2 text-right">هزینه</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tariffs.map((tariff, index) => (
+              <tr key={index} className="border-t">
+                <td className="p-2">{tariff.type}</td>
+                <td className="p-2">{tariff.price}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <div className="mt-4 bg-red-50 p-3 rounded-lg text-red-700">

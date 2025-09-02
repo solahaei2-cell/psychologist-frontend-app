@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Routes, Route } from "react-router-dom"
 import { motion } from "framer-motion"
+import { Toaster } from "react-hot-toast" // اضافه کردن Toaster
 import Navbar from "./components/Navbar"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
@@ -15,26 +16,37 @@ import Consultation from "./pages/Consultation"
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(() => {
-    // بررسی localStorage برای حالت ذخیره‌شده
     const saved = localStorage.getItem('darkMode')
     if (saved) return saved === 'true'
-    // اگه چیزی ذخیره نشده، از تنظیمات سیستم استفاده کن
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
   useEffect(() => {
-    // اعمال کلاس dark به html
     if (darkMode) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
-    // ذخیره حالت در localStorage
     localStorage.setItem('darkMode', darkMode)
   }, [darkMode])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            fontFamily: 'Vazir',
+            borderRadius: '8px',
+            padding: '12px',
+          },
+          success: { style: { background: '#DCFCE7', color: '#166534' } }, // سبز
+          error: { style: { background: '#FEE2E2', color: '#991B1B' } }, // قرمز
+          warning: { style: { background: '#FEF9C3', color: '#854D0E' } }, // زرد
+          info: { style: { background: '#DBEAFE', color: '#1E40AF' } }, // آبی
+        }}
+      />
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
       <motion.main 
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"

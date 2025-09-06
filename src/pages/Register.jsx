@@ -21,13 +21,20 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     if (form.password.length < 8) return setError('رمز عبور باید حداقل ۸ کاراکتر باشد')
     if (!form.acceptTerms) return setError('باید قوانین را بپذیرید')
+
     try {
       await api.post('/api/auth/register', form)
       navigate('/login')
-    } catch {
-      setError('خطا در ثبت‌نام')
+    } catch (err) {
+      // نمایش پیام خطای دقیق سرور اگر موجود باشد
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message)
+      } else {
+        setError('خطا در ثبت‌نام')
+      }
     }
   }
 

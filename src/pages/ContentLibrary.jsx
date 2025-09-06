@@ -1,26 +1,43 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import ContentCard from "../components/ContentCard"
 import toast from "react-hot-toast"
+import useSWR from "swr" // برای caching
 import api from "../lib/api"
+
+const fetcher = (url, token) => api.get(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(res => res.data)
 
 export default function ContentLibrary() {
   const [filterCategory, setFilterCategory] = useState("")
   const [filterType, setFilterType] = useState("")
   const [filterLevel, setFilterLevel] = useState("")
   const [search, setSearch] = useState("")
-  const [contents, setContents] = useState([])
   const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [contents, setContents] = useState([])
+  const observerRef = useRef(null)
+
+  const { data, error } = useSWR([`/api/content?page=${page}`, localStorage.getItem("token")], fetcher)
 
   useEffect(() => {
-    // فرض: API واقعی استفاده می‌شه
-    api.get(`/api/content?page=${page}`)
-      .then(res => {
-        setContents(prev => [...prev, ...res.data])
-        setHasMore(res.data.length > 0)
-      })
-      .catch(() => setHasMore(false))
-  }, [page])
+    if (data) {
+      setContents(prev => [...prev, ...data])
+    }
+    if (error || (data && data.length === 0)) {
+      observerRef.current = null
+    }
+  }, [data, error])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && observerRef.current) {
+          setPage(prev => prev + 1)
+        }
+      },
+      { threshold: 0.1 }
+    )
+    if (observerRef.current) observer.observe(observerRef.current)
+    return () => observerRef.current && observer.unobserve(observerRef.current)
+  }, [])
 
   const filteredContents = contents.filter((item) => {
     return (
@@ -57,10 +74,6 @@ export default function ContentLibrary() {
     }
   }
 
-  const loadMore = () => {
-    setPage(prev => prev + 1)
-  }
-
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-400 mb-6">کتابخانه محتوا</h1>
@@ -71,10 +84,12 @@ export default function ContentLibrary() {
           className="border p-2 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="جستجوی محتوا"
         />
         <select
           className="border p-2 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
           onChange={(e) => setFilterCategory(e.target.value)}
+          aria-label="فیلتر دسته‌بندی"
         >
           <option value="">دسته‌بندی</option>
           <option value="استرس">استرس</option>
@@ -86,6 +101,7 @@ export default function ContentLibrary() {
         <select
           className="border p-2 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
           onChange={(e) => setFilterType(e.target.value)}
+          aria-label="فیلتر نوع محتوا"
         >
           <option value="">نوع محتوا</option>
           <option value="مقاله">مقاله</option>
@@ -96,6 +112,7 @@ export default function ContentLibrary() {
         <select
           className="border p-2 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
           onChange={(e) => setFilterLevel(e.target.value)}
+          aria-label="فیلتر سطح دشواری"
         >
           <option value="">سطح</option>
           <option value="مبتدی">مبتدی</option>
@@ -113,15 +130,8 @@ export default function ContentLibrary() {
           />
         ))}
       </div>
-      {hasMore && (
-        <div className="text-center mt-6">
-          <button
-            onClick={loadMore}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 dark:bg-purple-500 transition"
-          >
-            بارگذاری بیشتر
-          </button>
-        </div>
+      {observerRef.current && (
+        <div ref={observerRef} className="h-10" />
       )}
     </div>
   )

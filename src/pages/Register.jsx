@@ -7,9 +7,7 @@ export default function Register() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
-    mobile: '',
     password: '',
-    gender: '',
     acceptTerms: false
   })
   const [error, setError] = useState('')
@@ -23,12 +21,14 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
     if (form.password.length < 8) return setError('رمز عبور باید حداقل ۸ کاراکتر باشد')
     if (!form.acceptTerms) return setError('باید قوانین را بپذیرید')
 
     try {
       setLoading(true)
-      const res = await api.post('/api/auth/register', form)
+      const { fullName, email, password, acceptTerms } = form
+      const res = await api.post('/api/auth/register', { fullName, email, password, acceptTerms })
       if (res.data.success) {
         navigate('/login')
       } else {
@@ -52,13 +52,7 @@ export default function Register() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="fullName" placeholder="نام کامل" value={form.fullName} onChange={handleChange} className="w-full border p-2 rounded" required />
         <input name="email" type="email" placeholder="ایمیل" value={form.email} onChange={handleChange} className="w-full border p-2 rounded" required />
-        <input name="mobile" type="tel" placeholder="موبایل" value={form.mobile} onChange={handleChange} className="w-full border p-2 rounded" required />
         <input name="password" type="password" placeholder="رمز عبور" value={form.password} onChange={handleChange} className="w-full border p-2 rounded" required />
-        <select name="gender" value={form.gender} onChange={handleChange} className="w-full border p-2 rounded" required>
-          <option value="">جنسیت</option>
-          <option value="male">مرد</option>
-          <option value="female">زن</option>
-        </select>
         <label className="flex items-center">
           <input type="checkbox" name="acceptTerms" checked={form.acceptTerms} onChange={handleChange} className="ml-2" />
           قوانین را می‌پذیرم

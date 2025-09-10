@@ -16,13 +16,14 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
     try {
       setLoading(true)
-      const res = await api.post('/api/auth/login', form)
+      const res = await api.post('/api/auth/login', { email: form.email, password: form.password })
       if (res.data.success && res.data.token) {
         // ذخیره توکن برای درخواست‌های بعدی
         localStorage.setItem('token', res.data.token)
-        navigate('/dashboard') // یا هر صفحه‌ای که بعد از لاگین باید بروه
+        navigate('/dashboard')
       } else {
         setError(res.data.message || 'خطا در ورود')
       }

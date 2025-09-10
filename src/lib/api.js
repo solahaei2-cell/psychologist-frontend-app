@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://psychologist-ai-fhcp.o
 
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' }
 });
 
 // اگر توکن ذخیره شده باشد، هدر Authorization را اضافه کن

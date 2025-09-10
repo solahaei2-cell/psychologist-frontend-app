@@ -12,23 +12,38 @@ export default function Dashboard() {
   const [recommendations, setRecommendations] = useState([])
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    api.get("/api/users/profile", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    // گرفتن پروفایل کاربر
+    api.get("/api/users/profile")
       .then(res => setUserData(res.data))
       .catch(() => setUserData(null))
-    api.get("/api/users/stats", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+
+    // گرفتن آمار کاربر
+    api.get("/api/users/stats")
       .then(res => setStats(res.data))
       .catch(() => setStats(null))
-    api.get("/api/assessments/history", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+
+    // گرفتن تاریخچه ارزیابی‌ها
+    api.get("/api/assessments/history")
       .then(res => setHistory(res.data))
       .catch(() => setHistory([]))
-    api.get("/api/recommendations", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+
+    // گرفتن پیشنهادات
+    api.get("/api/recommendations")
       .then(res => setRecommendations(res.data))
       .catch(() => setRecommendations([]))
   }, [])
 
-  const showWarning = () => toast("لطفاً پروفایل خود را کامل کنید ⚠️", { id: 'warning', style: { background: '#FEF9C3', color: '#854D0E' } })
-  const showInfo = () => toast("جدید: دوره‌های آموزشی اضافه شد! ℹ️", { id: 'info', style: { background: '#DBEAFE', color: '#1E40AF' } })
+  const showWarning = () =>
+    toast("لطفاً پروفایل خود را کامل کنید ⚠️", {
+      id: "warning",
+      style: { background: "#FEF9C3", color: "#854D0E" }
+    })
+
+  const showInfo = () =>
+    toast("جدید: دوره‌های آموزشی اضافه شد! ℹ️", {
+      id: "info",
+      style: { background: "#DBEAFE", color: "#1E40AF" }
+    })
 
   // تعریف مدال‌ها بر اساس stats
   const medals = []
@@ -39,10 +54,12 @@ export default function Dashboard() {
   // محاسبه درصد پیشرفت (فرض: حداکثر ۱۰ تست و ۲۰ محتوا)
   const maxAssessments = 10
   const maxContent = 20
-  const progressPercent = stats ? Math.min(
-    ((stats.assessmentsCount / maxAssessments) + (stats.contentCompleted / maxContent)) * 50,
-    100
-  ).toFixed(0) : 0
+  const progressPercent = stats
+    ? Math.min(
+        ((stats.assessmentsCount / maxAssessments) + (stats.contentCompleted / maxContent)) * 50,
+        100
+      ).toFixed(0)
+    : 0
 
   if (!userData || !stats) {
     return <div className="text-center text-gray-500 dark:text-gray-300">در حال بارگذاری...</div>

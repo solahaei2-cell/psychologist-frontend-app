@@ -13,6 +13,7 @@ export default function Register() {
     acceptTerms: false
   })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -26,15 +27,21 @@ export default function Register() {
     if (!form.acceptTerms) return setError('باید قوانین را بپذیرید')
 
     try {
-      await api.post('/api/auth/register', form)
-      navigate('/login')
+      setLoading(true)
+      const res = await api.post('/api/auth/register', form)
+      if (res.data.success) {
+        navigate('/login')
+      } else {
+        setError(res.data.message || 'خطا در ثبت‌نام')
+      }
     } catch (err) {
-      // نمایش پیام خطای دقیق سرور اگر موجود باشد
-      if (err.response && err.response.data && err.response.data.message) {
+      if (err.response?.data?.message) {
         setError(err.response.data.message)
       } else {
         setError('خطا در ثبت‌نام')
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -56,7 +63,9 @@ export default function Register() {
           <input type="checkbox" name="acceptTerms" checked={form.acceptTerms} onChange={handleChange} className="ml-2" />
           قوانین را می‌پذیرم
         </label>
-        <button className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700">ثبت‌نام</button>
+        <button disabled={loading} className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700">
+          {loading ? 'در حال ثبت‌نام...' : 'ثبت‌نام'}
+        </button>
       </form>
     </div>
   )

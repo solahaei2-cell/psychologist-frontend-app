@@ -12,7 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     // دریافت آمار واقعی از endpoint عمومی
-    api.get('/api/public-stats')
+    api.get('/api/stats/public')
       .then(res => setStats(res.data))
       .catch(() => setStats({
         activeUsers: 0,

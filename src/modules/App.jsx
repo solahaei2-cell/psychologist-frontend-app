@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuthStore } from "../store/auth";
 import Home from "../pages/Home.jsx";
+import Dashboard from "../pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ContentList from "../pages/ContentLibrary.jsx";
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/content" element={<ContentList />} />
+          <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/chat" element={<Protected><Chat /></Protected>} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../../utils/api";
+import api from "../../lib/api";
 
 export default function ContentList() {
   const [items, setItems] = useState([]);
@@ -9,7 +9,7 @@ export default function ContentList() {
     (async () => {
       setLoading(true);
       const res = await api.get("/api/content");
-      const list = res.data || res.contents || res.rows || [];
+      const list = res.data?.data || res.data || [];
       setItems(Array.isArray(list) ? list : (list?.rows || []));
       setLoading(false);
     })();

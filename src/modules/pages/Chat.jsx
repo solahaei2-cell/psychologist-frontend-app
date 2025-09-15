@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { api } from "../../utils/api";
-import { useAuthStore } from "../../store/auth";
+import api from "../../lib/api";
 
 export default function Chat() {
-  const { token } = useAuthStore();
+  // توکن دیگر نیاز نیست اینجا پاس شود؛ اینترسپتور axios آن را اضافه می‌کند
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const listRef = useRef(null);
@@ -18,8 +17,9 @@ export default function Chat() {
     const userMsg = input;
     setInput("");
     push("user", userMsg);
-    const res = await api.post("/api/chat", { message: userMsg }, token);
-    const botText = res.reply || res.answer || res.message || JSON.stringify(res);
+    const res = await api.post("/api/chat/message", { message: userMsg });
+    const data = res.data || res;
+    const botText = data.reply || data.answer || data.message || JSON.stringify(data);
     push("assistant", botText);
   }
 

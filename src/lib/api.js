@@ -29,8 +29,11 @@ api.interceptors.response.use(
       // حذف توکن نامعتبر
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
-      // redirect به صفحه login
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+      // redirect به صفحه login فقط اگر در صفحات محافظت شده باشیم
+      const protectedRoutes = ['/dashboard', '/profile', '/assessments', '/consultation'];
+      const currentPath = window.location.pathname;
+      
+      if (protectedRoutes.some(route => currentPath.startsWith(route))) {
         window.location.href = '/login';
       }
     }

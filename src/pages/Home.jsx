@@ -11,13 +11,15 @@ export default function Home() {
   })
 
   useEffect(() => {
-    // نمایش آمار ثابت برای صفحه اصلی (بدون نیاز به authentication)
-    setStats({
-      activeUsers: 150,
-      assessments: 1200,
-      content: 45,
-      satisfaction: '95%'
-    })
+    // دریافت آمار واقعی از endpoint عمومی
+    api.get('/api/public-stats')
+      .then(res => setStats(res.data))
+      .catch(() => setStats({
+        activeUsers: 0,
+        assessments: 0,
+        content: 0,
+        satisfaction: '0%'
+      }))
   }, [])
 
   return (

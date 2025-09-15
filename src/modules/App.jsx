@@ -2,10 +2,10 @@ import React from "react";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuthStore } from "../store/auth";
-import Home from "./pages/Home.jsx";
+import Home from "../pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-import ContentList from "./pages/ContentList.jsx";
+import ContentList from "../pages/ContentLibrary.jsx";
 import Chat from "./pages/Chat.jsx";
 import Profile from "./pages/Profile.jsx";
 

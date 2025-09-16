@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, Navigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Toaster } from "react-hot-toast"
 import { HelmetProvider, Helmet } from "react-helmet-async" // برای SEO
@@ -14,6 +14,14 @@ import GAD7 from "./pages/assessments/GAD7"
 import PHQ9 from "./pages/assessments/PHQ9"
 import Quick from "./pages/assessments/Quick"
 import Consultation from "./pages/Consultation"
+import { useAuthStore } from "./store/auth"
+
+// محافظ مسیرها بر اساس وجود توکن
+function Protected({ children }) {
+  const { token } = useAuthStore();
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -21,6 +29,20 @@ export default function App() {
     if (saved) return saved === 'true'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
+
+  // همگام‌سازی توکن Zustand با localStorage/sessionStorage برای اینترسپتور axios
+  const { token } = useAuthStore();
+  useEffect(() => {
+    try {
+      if (token) {
+        localStorage.setItem('token', token);
+        sessionStorage.setItem('token', token);
+      } else {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+      }
+    } catch {}
+  }, [token]);
 
   useEffect(() => {
     if (darkMode) {
@@ -64,7 +86,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
             <Route path="/content" element={<ContentLibrary />} />
             <Route path="/assessments" element={<Assessments />} />
             <Route path="/assessments/gad7" element={<GAD7 />} />

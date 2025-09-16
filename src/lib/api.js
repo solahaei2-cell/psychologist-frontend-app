@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useAuthStore } from '../store/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://psychologist-ai-fhcp.onrender.com';
 
@@ -15,10 +14,7 @@ api.interceptors.request.use(
     try {
       token = localStorage.getItem('token') || sessionStorage.getItem('token');
     } catch {}
-    try {
-      if (!token) token = useAuthStore.getState()?.token;
-    } catch {}
-    
+
     console.log('[DEBUG] Token found:', token ? 'YES' : 'NO');
     console.log('[DEBUG] Token value:', token ? token.substring(0, 20) + '...' : 'null');
     

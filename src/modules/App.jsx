@@ -61,6 +61,27 @@ function Protected({ children }) {
 }
 
 export default function App() {
+  const { token } = useAuthStore();
+
+  // Sync token from store to localStorage for the api client interceptor
+  useEffect(() => {
+    if (token) {
+      try {
+        localStorage.setItem('token', token);
+        sessionStorage.setItem('token', token);
+      } catch (e) {
+        console.error("[App.jsx] Error saving token to storage:", e);
+      }
+    } else {
+      try {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+      } catch (e) {
+        console.error("[App.jsx] Error removing token from storage:", e);
+      }
+    }
+  }, [token]);
+
   return (
     <>
       <Nav />

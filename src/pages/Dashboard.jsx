@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import toast from "react-hot-toast"
 import api from "../lib/api"
+import { useAuthStore } from "../store/auth"
 import HistoryList from "../components/HistoryList"
 import ScoreChart from "../components/ScoreChart"
 
@@ -10,8 +11,15 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [history, setHistory] = useState([])
   const [recommendations, setRecommendations] = useState([])
+  const { token: storeToken } = useAuthStore();
 
   useEffect(() => {
+    // فقط وقتی توکن در دسترس شد، فراخوانی‌ها انجام شوند
+    const token = storeToken || (() => { try { return localStorage.getItem('token') || sessionStorage.getItem('token'); } catch { return null; } })();
+    if (!token) {
+      console.log('[Dashboard] No token found, skipping data fetch.');
+      return;
+    }
     console.log('Fetching user profile...');
     api.get("/api/users/profile")
       .then(res => {
@@ -55,7 +63,7 @@ export default function Dashboard() {
         console.error('Error fetching recommendations:', err);
         setRecommendations([]);
       })
-  }, [])
+  }, [storeToken])
 
   const showWarning = () =>
     toast("لطفاً پروفایل خود را کامل کنید ⚠️", {
@@ -85,8 +93,8 @@ export default function Dashboard() {
       ).toFixed(0)
     : 0
 
-  // بررسی وجود توکن
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  // بررسی وجود توکن برای نمایش UI محافظت‌شده
+  const token = storeToken || localStorage.getItem('token') || sessionStorage.getItem('token');
   
   if (!token) {
     return (

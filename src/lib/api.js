@@ -44,14 +44,21 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // حذف توکن نامعتبر
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
-      // redirect به صفحه login فقط اگر در صفحات محافظت شده باشیم
-      const protectedRoutes = ['/dashboard', '/profile', '/assessments', '/consultation'];
-      const currentPath = window.location.pathname;
-      
+      try {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+      } catch {}
+      // Redirect فقط اگر در صفحات محافظت‌شده هستیم
+      const protectedRoutes = ['/dashboard', '/profile', '/assessments', '/consultation', '/content', '/chat'];
+      const isHashRouter = typeof window !== 'undefined' && !!window.location.hash && window.location.hash.startsWith('#/');
+      const currentPath = isHashRouter ? window.location.hash.slice(1) : window.location.pathname;
+
       if (protectedRoutes.some(route => currentPath.startsWith(route))) {
-        window.location.href = '/login';
+        if (isHashRouter) {
+          window.location.hash = '#/login';
+        } else {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

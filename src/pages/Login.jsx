@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../lib/api';
+import { useAuthStore } from '../store/auth';
 
 export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const login = useAuthStore(state => state.login);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,27 +17,21 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     try {
-      // درخواست لاگین
-      const res = await api.post('/api/auth/login', {
-        email: form.email,
-        password: form.password,
-      });
-
-      console.log('Login response:', res.data); // <- این خط خیلی مهمه
-
-      // چک کردن توکن
-      const token = res.data.token || res.data.accessToken; // اسم کلید ممکنه فرق کنه
-      if (token) {
-        localStorage.setItem('token', token); // ذخیره توکن
-        navigate('/dashboard'); // رفتن به داشبورد
+      setLoading(true);
+      console.log('[Login] submitting...');
+      const ok = await login(form.email, form.password);
+      if (ok) {
+        try {
+          const token = localStorage.getItem('token') || useAuthStore.getState().token;
+          console.log('[Login] token after login:', token ? token.substring(0,20)+'...' : 'null');
+        } catch {}
+        navigate('/dashboard');
       } else {
-        setError(res.data.message || 'توکن دریافت نشد، لاگین موفق نبود');
+        setError('خطا در ورود');
       }
     } catch (err) {
-      console.log('Login error:', err);
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {

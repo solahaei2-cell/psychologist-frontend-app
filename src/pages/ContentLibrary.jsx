@@ -4,7 +4,11 @@ import toast from "react-hot-toast"
 import useSWR from "swr" // برای caching
 import api from "../lib/api"
 
-const fetcher = (url, token) => api.get(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(res => res.data)
+// پاسخ بک‌اند به صورت { success: true, data: [...] } است؛ آرایه data را برگردان
+const fetcher = (url, token) =>
+  api
+    .get(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    .then(res => (res.data?.data ?? res.data));
 
 export default function ContentLibrary() {
   const [filterCategory, setFilterCategory] = useState("")
@@ -53,7 +57,7 @@ export default function ContentLibrary() {
   const handleLike = async (item) => {
     try {
       const token = localStorage.getItem("token")
-      await api.post("/api/content/like", { contentId: item.id }, {
+      await api.post(`/api/content/${item.id}/like`, null, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       })
       toast.success(`لایک شد: ${item.title} ❤️`)
@@ -65,7 +69,7 @@ export default function ContentLibrary() {
   const handleComplete = async (item) => {
     try {
       const token = localStorage.getItem("token")
-      await api.post("/api/content/complete", { contentId: item.id }, {
+      await api.post(`/api/content/${item.id}/complete`, null, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       })
       toast.success(`🎉 محتوای "${item.title}" تکمیل شد! +۱۰ امتیاز`)

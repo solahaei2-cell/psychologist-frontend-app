@@ -16,18 +16,45 @@ export const useAuthStore = create(
           const res = await api.post("/api/auth/login", { email, password });
           if (res.data?.success === false) throw new Error(res.data?.message || "خطا در ورود");
 
-          const token = res.data?.token;
+          // پشتیبانی از کلیدهای مختلف توکن
+          let token = res.data?.token
+            || res.data?.accessToken
+            || res.data?.data?.token
+            || res.data?.data?.accessToken
+            || null;
+
+          // fallback: دریافت از هدر Authorization
+          if (!token) {
+            const authHeader = res.headers?.authorization || res.headers?.Authorization;
+            if (authHeader && String(authHeader).toLowerCase().startsWith('bearer ')) {
+              token = String(authHeader).slice(7);
+            }
+          }
+
+          if (!token) {
+            throw new Error("توکن احراز هویت از سرور دریافت نشد");
+          }
+
+          console.debug('[auth.store] login token len:', token.length);
+
           // ذخیره توکن هم در وضعیت برنامه و هم در storage مرورگر برای اینترسپتور axios
           set({ token });
           try {
             localStorage.setItem('token', token);
+            sessionStorage.setItem('token', token);
           } catch {}
+
+          // بلافاصله روی axios قرار بده تا درخواست بعدی همزمان درست برود
+          try {
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          } catch {}
+
           toast.success("ورود موفق");
 
           await get().fetchMe();
           return true;
         } catch (e) {
-          console.error(e);
+          console.error('[auth.store] login error:', e);
           toast.error(e.response?.data?.message || e.message || "ورود ناموفق");
           return false;
         } finally {

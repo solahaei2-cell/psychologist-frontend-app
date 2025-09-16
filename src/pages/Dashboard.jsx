@@ -12,25 +12,49 @@ export default function Dashboard() {
   const [recommendations, setRecommendations] = useState([])
 
   useEffect(() => {
-    // گرفتن پروفایل کاربر
+    console.log('Fetching user profile...');
     api.get("/api/users/profile")
-      .then(res => setUserData(res.data))
-      .catch(() => setUserData(null))
+      .then(res => {
+        console.log('Profile data:', res.data);
+        setUserData(res.data);
+      })
+      .catch(err => {
+        console.error('Error fetching profile:', err);
+        setUserData(null);
+      });
 
-    // گرفتن آمار کاربر
+    console.log('Fetching user stats...');
     api.get("/api/users/stats")
-      .then(res => setStats(res.data))
-      .catch(() => setStats(null))
+      .then(res => {
+        console.log('Stats data:', res.data);
+        setStats(res.data);
+      })
+      .catch(err => {
+        console.error('Error fetching stats:', err);
+        setStats(null);
+      });
 
-    // گرفتن تاریخچه ارزیابی‌ها
+    console.log('Fetching assessment history...');
     api.get("/api/assessments/history")
-      .then(res => setHistory(res.data))
-      .catch(() => setHistory([]))
+      .then(res => {
+        console.log('History data:', res.data);
+        setHistory(res.data);
+      })
+      .catch(err => {
+        console.error('Error fetching history:', err);
+        setHistory([]);
+      });
 
-    // گرفتن پیشنهادات
+    console.log('Fetching recommendations...');
     api.get("/api/recommendations")
-      .then(res => setRecommendations(res.data))
-      .catch(() => setRecommendations([]))
+      .then(res => {
+        console.log('Recommendations data:', res.data);
+        setRecommendations(res.data);
+      })
+      .catch(err => {
+        console.error('Error fetching recommendations:', err);
+        setRecommendations([]);
+      })
   }, [])
 
   const showWarning = () =>
@@ -60,6 +84,24 @@ export default function Dashboard() {
         100
       ).toFixed(0)
     : 0
+
+  // بررسی وجود توکن
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  
+  if (!token) {
+    return (
+      <div className="text-center p-8">
+        <h2 className="text-xl font-bold text-red-600 mb-4">احراز هویت مورد نیاز</h2>
+        <p className="text-gray-600 mb-4">برای دسترسی به داشبورد باید وارد شوید</p>
+        <Link 
+          to="/login" 
+          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
+        >
+          ورود به حساب کاربری
+        </Link>
+      </div>
+    );
+  }
 
   if (!userData || !stats) {
     return <div className="text-center text-gray-500 dark:text-gray-300">در حال بارگذاری...</div>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://psychologist-ai-fhcp.onrender.com';
 
@@ -10,10 +11,26 @@ const api = axios.create({
 // Interceptor برای اضافه کردن توکن به هر درخواست
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    let token = null;
+    try {
+      token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    } catch {}
+    try {
+      if (!token) token = useAuthStore.getState()?.token;
+    } catch {}
+    
+    console.log('[DEBUG] Token found:', token ? 'YES' : 'NO');
+    console.log('[DEBUG] Token value:', token ? token.substring(0, 20) + '...' : 'null');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    try {
+      if (typeof console !== 'undefined') {
+        const hasAuth = !!config.headers.Authorization;
+        console.debug('[api] request', config.method?.toUpperCase(), config.url, 'auth:', hasAuth ? 'yes' : 'no');
+      }
+    } catch {}
     return config;
   },
   (error) => {

@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from "react"
-import { Routes, Route, Navigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Toaster } from "react-hot-toast"
-import { HelmetProvider, Helmet } from "react-helmet-async" // برای SEO
+// این فایل اصلی برای مسیریابی اپلیکیشن است.
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import { HelmetProvider, Helmet } from 'react-helmet-async';
 import Navbar from "./components/Navbar"
-import Home from "./pages/Home"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import Dashboard from "./pages/Dashboard"
-import ContentLibrary from "./pages/ContentLibrary"
-import Assessments from "./pages/assessments/Assessments"
-import GAD7 from "./pages/assessments/GAD7"
-import PHQ9 from "./pages/assessments/PHQ9"
-import Quick from "./pages/assessments/Quick"
-import Consultation from "./pages/Consultation"
-import { useAuthStore } from "./store/auth"
+import Home from './pages/Home';
+import Login from './modules/pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import ContentLibrary from './pages/ContentLibrary';
+import Assessments from './pages/assessments/Assessments';
+import GAD7 from './pages/assessments/GAD7';
+import PHQ9 from './pages/assessments/PHQ9';
+import Quick from './pages/assessments/Quick';
+import Consultation from './pages/Consultation';
+import { useAuthStore } from './store/auth';
 
 // محافظ مسیرها بر اساس وجود توکن
 function Protected({ children }) {
@@ -23,26 +24,17 @@ function Protected({ children }) {
   return children;
 }
 
-export default function App() {
+function App() {
+  const [isLoaded, setIsLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
     if (saved) return saved === 'true'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
-  // همگام‌سازی توکن Zustand با localStorage/sessionStorage برای اینترسپتور axios
-  const { token } = useAuthStore();
   useEffect(() => {
-    try {
-      if (token) {
-        localStorage.setItem('token', token);
-        sessionStorage.setItem('token', token);
-      } else {
-        localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
-      }
-    } catch {}
-  }, [token]);
+    setTimeout(() => setIsLoaded(true), 1000);
+  }, []);
 
   useEffect(() => {
     if (darkMode) {
@@ -53,16 +45,31 @@ export default function App() {
     localStorage.setItem('darkMode', darkMode)
   }, [darkMode])
 
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="w-16 h-16 border-4 border-t-blue-600 border-b-blue-600 border-l-transparent border-r-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
   return (
     <HelmetProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className={`min-h-screen flex flex-col ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} text-gray-800 font-sans rtl`}>
         <Helmet>
-          <title>روان‌شناس هوشمند - بهبود سلامت روان</title>
-          <meta name="description" content="اپلیکیشن روان‌شناسی با تست‌های استاندارد، محتوای آموزشی، و مشاوره آنلاین برای بهبود سلامت روان شما" />
-          <meta name="keywords" content="روان‌شناسی, سلامت روان, تست روان‌شناسی, مشاوره آنلاین" />
+          <title>روان‌شناس هوشمند</title>
+          <meta name="description" content="پلتفرم روان‌شناسی هوشمند برای ارزیابی، آموزش و مشاوره آنلاین با استفاده از هوش مصنوعی" />
+          <meta name="keywords" content="روان‌شناسی, مشاوره آنلاین, ارزیابی روان‌شناختی, هوش مصنوعی, سلامت روان" />
           <meta property="og:title" content="روان‌شناس هوشمند" />
-          <meta property="og:description" content="بهبود سلامت روان با ابزارهای علمی و مشاوره حرفه‌ای" />
+          <meta property="og:description" content="پلتفرم روان‌شناسی هوشمند برای ارزیابی، آموزش و مشاوره آنلاین" />
           <meta property="og:type" content="website" />
+          <meta name="twitter:card" content="summary" />
+          <meta name="twitter:title" content="روان‌شناس هوشمند" />
+          <meta name="twitter:description" content="پلتفرم روان‌شناسی هوشمند برای ارزیابی، آموزش و مشاوره آنلاین" />
         </Helmet>
         <Toaster
           position="top-right"
@@ -76,8 +83,7 @@ export default function App() {
           }}
         />
         <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-        <motion.main 
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        <motion.main
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -97,5 +103,7 @@ export default function App() {
         </motion.main>
       </div>
     </HelmetProvider>
-  )
+  );
 }
+
+export default App;

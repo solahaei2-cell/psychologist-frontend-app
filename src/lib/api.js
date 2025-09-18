@@ -1,45 +1,41 @@
 import axios from 'axios';
+import { useAuthStore } from './store/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://psychologist-ai-fhcp.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE,
-  headers: { 'Content-Type': 'application/json' }
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
 });
 
-// Interceptor برای اضافه کردن توکن به هر درخواست
-api.interceptors.request.use(
-  (config) => {
-    let token = null;
-    try {
-      token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    } catch {}
-
-    console.log('[DEBUG] Token found:', token ? 'YES' : 'NO');
-    console.log('[DEBUG] Token value:', token ? token.substring(0, 20) + '...' : 'null');
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+// مدیریت خودکار توکن
+api.interceptors.request.use(config => {
+  const token = useAuthStore.getState().token || localStorage.getItem('token') || sessionStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  // فقط در محیط توسعه لاگ بزن
+  if (import.meta.env.DEV) {
     try {
       if (typeof console !== 'undefined') {
         const hasAuth = !!config.headers.Authorization;
         console.debug('[api] request', config.method?.toUpperCase(), config.url, 'auth:', hasAuth ? 'yes' : 'no');
       }
     } catch {}
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
   }
-);
+  return config;
+});
 
-// Interceptor برای handle کردن خطاهای authentication
+// مدیریت خطاهای سرور
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     if (error.response?.status === 401) {
-      // حذف توکن نامعتبر
+      useAuthStore.getState().logout();
       try {
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
@@ -55,10 +51,12 @@ api.interceptors.response.use(
         } else {
           window.location.href = '/login';
         }
+      } else if (window.location.pathname !== '/login') {
+        window.location.replace('/login?session_expired=true');
       }
     }
     return Promise.reject(error);
   }
 );
 
-export default api;
+export { api };

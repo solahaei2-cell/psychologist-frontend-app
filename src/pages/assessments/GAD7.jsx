@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react"
+import toast from 'react-hot-toast'
 import QuestionGroup from "../../components/QuestionGroup"
 import { GAD7_ITEMS, sum, interpretGAD7 } from "../../lib/tests"
-import api from "../../lib/api"
+import { api } from "../../lib/api"
 import { Link } from "react-router-dom"
 
 export default function GAD7() {
@@ -30,7 +31,10 @@ export default function GAD7() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!allAnswered) return
+    if (!allAnswered) {
+      toast.error("لطفاً به همه سوالات پاسخ دهید")
+      return
+    }
     const score = sum(answers)
     const maxScore = GAD7_ITEMS.length * 3 // حداکثر امتیاز: 7 سوال × 3
     const percentage = ((score / maxScore) * 100).toFixed(1)
@@ -38,15 +42,26 @@ export default function GAD7() {
     const resultData = { score, percentage, interp }
     setResult(resultData)
 
+    // اگر کاربر وارد نشده باشد، فقط محاسبه را نشان بده و پیام بده
+    let hasToken = false
     try {
-      const token = localStorage.getItem("token")
+      hasToken = !!(localStorage.getItem("token") || sessionStorage.getItem("token"))
+    } catch {}
+
+    if (!hasToken) {
+      toast.success("نتیجه شما محاسبه شد. برای ذخیره نتایج لطفاً وارد حساب شوید.")
+      return
+    }
+
+    try {
       await api.post(
         "/api/assessments/submit",
-        { type: "GAD-7", score, date: new Date().toISOString() },
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        { type: "GAD-7", score, date: new Date().toISOString() }
       )
+      toast.success("نتیجه با موفقیت ذخیره شد.")
     } catch (error) {
       console.error("Error saving assessment:", error)
+      toast.error("ذخیره نتیجه انجام نشد. لطفاً بعداً دوباره تلاش کنید.")
     }
   }
 

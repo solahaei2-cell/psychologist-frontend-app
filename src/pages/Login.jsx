@@ -1,77 +1,100 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
+import { api } from '../lib/api';
 import { useAuthStore } from '../store/auth';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Login() {
-  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore(state => state.login);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuthStore();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
+  useEffect(() => {
+    // بررسی اگر از صفحه لاگین با پیام انقضا آمده‌ایم
+    if (location.search.includes('session_expired=true')) {
+      toast.warning('نشست شما منقضی شده است. لطفاً مجدد وارد شوید.');
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    if (!form.email || !form.password) {
+      toast.error('لطفاً ایمیل و رمز عبور را وارد کنید');
+      return;
+    }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log('[Login] submitting...');
-      const ok = await login(form.email, form.password);
-      if (ok) {
-        try {
-          const token = localStorage.getItem('token') || useAuthStore.getState().token;
-          console.log('[Login] token after login:', token ? token.substring(0,20)+'...' : 'null');
-        } catch {}
-        navigate('/dashboard');
-      } else {
-        setError('خطا در ورود');
+      const { data } = await api.post('/api/auth/login', form);
+      
+      if (data.token) {
+        login(data.token);
+        toast.success('ورود با موفقیت انجام شد');
+        
+        // ریدایرکت به صفحه قبلی یا داشبورد
+        const from = location.state?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
       }
-    } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('خطا در ورود');
-      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'خطا در ارتباط با سرور';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow">
-      <h2 className="text-2xl font-bold text-purple-600 mb-4">ورود</h2>
-      {error && <p className="text-red-500 mb-3">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          name="email"
-          type="email"
-          placeholder="ایمیل"
-          value={form.email}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="رمز عبور"
-          value={form.password}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <button
-          disabled={loading}
-          className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700"
-        >
-          {loading ? 'در حال ورود...' : 'ورود'}
-        </button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
+        <h1 className="text-3xl font-bold text-center text-gray-900">ورود به حساب کاربری</h1>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                ایمیل
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => setForm({...form, email: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                رمز عبور
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={form.password}
+                onChange={(e) => setForm({...form, password: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+              {loading ? <LoadingSpinner size={5} /> : 'ورود'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

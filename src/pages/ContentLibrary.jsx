@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react"
 import ContentCard from "../components/ContentCard"
 import toast from "react-hot-toast"
 import useSWR from "swr" // برای caching
-import api from "../lib/api"
+import { api } from "../lib/api"
 
 // پاسخ بک‌اند به صورت { success: true, data: [...] } است؛ آرایه data را برگردان
 const fetcher = (url, token) =>

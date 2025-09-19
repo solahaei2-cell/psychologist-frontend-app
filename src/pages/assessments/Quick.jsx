@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react"
 import QuestionGroup from "../../components/QuestionGroup"
 import { QUICK_ITEMS, sum } from "../../lib/tests"
-import api from "../../lib/api"
+import { api } from "../../lib/api"
+import { guestApi } from "../../lib/guest-api"
 import { Link } from "react-router-dom"
 
 export default function Quick() {
@@ -40,15 +41,29 @@ export default function Quick() {
     const resultData = { score, percentage, status }
     setResult(resultData)
 
+    // اگر کاربر وارد نشده باشد، از guest API استفاده می‌کنیم
+    let hasToken = false
     try {
-      const token = localStorage.getItem("token")
-      await api.post(
-        "/api/assessments/submit",
-        { type: "Quick", score, date: new Date().toISOString() },
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      )
+      hasToken = !!(localStorage.getItem("token") || sessionStorage.getItem("token"))
+    } catch {}
+
+    try {
+      if (hasToken) {
+        // کاربر وارد شده - از API اصلی استفاده می‌کنیم
+        await api.post(
+          "/api/assessments/submit",
+          { type: "Quick", score, date: new Date().toISOString() }
+        )
+      } else {
+        // کاربر مهمان - از guest API استفاده می‌کنیم
+        await guestApi.post(
+          "/api/assessments/guest-submit",
+          { type: "Quick", score, date: new Date().toISOString() }
+        )
+      }
     } catch (error) {
       console.error("Error saving assessment:", error)
+      // برای کاربران مهمان، حتی اگر API شکست خورد، نتیجه را نمایش می‌دهیم
     }
   }
 

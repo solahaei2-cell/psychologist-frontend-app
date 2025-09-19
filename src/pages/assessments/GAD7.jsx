@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import QuestionGroup from "../../components/QuestionGroup"
 import { GAD7_ITEMS, sum, interpretGAD7 } from "../../lib/tests"
 import { api } from "../../lib/api"
+import { guestApi } from "../../lib/guest-api"
 import { Link } from "react-router-dom"
 
 export default function GAD7() {
@@ -42,26 +43,36 @@ export default function GAD7() {
     const resultData = { score, percentage, interp }
     setResult(resultData)
 
-    // اگر کاربر وارد نشده باشد، فقط محاسبه را نشان بده و پیام بده
+    // اگر کاربر وارد نشده باشد، از guest API استفاده می‌کنیم
     let hasToken = false
     try {
       hasToken = !!(localStorage.getItem("token") || sessionStorage.getItem("token"))
     } catch {}
 
-    if (!hasToken) {
-      toast.success("نتیجه شما محاسبه شد. برای ذخیره نتایج لطفاً وارد حساب شوید.")
-      return
-    }
-
     try {
-      await api.post(
-        "/api/assessments/submit",
-        { type: "GAD-7", score, date: new Date().toISOString() }
-      )
-      toast.success("نتیجه با موفقیت ذخیره شد.")
+      if (hasToken) {
+        // کاربر وارد شده - از API اصلی استفاده می‌کنیم
+        await api.post(
+          "/api/assessments/submit",
+          { type: "GAD-7", score, date: new Date().toISOString() }
+        )
+        toast.success("نتیجه با موفقیت ذخیره شد.")
+      } else {
+        // کاربر مهمان - از guest API استفاده می‌کنیم
+        await guestApi.post(
+          "/api/assessments/guest-submit",
+          { type: "GAD-7", score, date: new Date().toISOString() }
+        )
+        toast.success("نتیجه شما محاسبه شد. برای ذخیره نتایج دائمی، لطفاً وارد حساب شوید.")
+      }
     } catch (error) {
       console.error("Error saving assessment:", error)
-      toast.error("ذخیره نتیجه انجام نشد. لطفاً بعداً دوباره تلاش کنید.")
+      if (hasToken) {
+        toast.error("ذخیره نتیجه انجام نشد. لطفاً بعداً دوباره تلاش کنید.")
+      } else {
+        // برای کاربران مهمان، حتی اگر API شکست خورد، نتیجه را نمایش می‌دهیم
+        toast.success("نتیجه شما محاسبه شد.")
+      }
     }
   }
 

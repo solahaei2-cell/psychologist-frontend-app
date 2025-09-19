@@ -14,19 +14,25 @@ const api = axios.create({
 
 // مدیریت خودکار توکن
 api.interceptors.request.use(config => {
-  const token = useAuthStore.getState().token || localStorage.getItem('token') || sessionStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const authStore = useAuthStore.getState();
+  const token = authStore.token || localStorage.getItem('token') || sessionStorage.getItem('token');
+  
+  if (!token) {
+    console.error('[API] No token available - redirecting to login');
+    window.location.href = '/login?auth_error=no_token';
+    return config;
   }
-  // فقط در محیط توسعه لاگ بزن
+
+  config.headers.Authorization = `Bearer ${token}`;
+  
   if (import.meta.env.DEV) {
-    try {
-      if (typeof console !== 'undefined') {
-        const hasAuth = !!config.headers.Authorization;
-        console.debug('[api] request', config.method?.toUpperCase(), config.url, 'auth:', hasAuth ? 'yes' : 'no');
-      }
-    } catch {}
+    console.debug('[API] Request:', {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token
+    });
   }
+  
   return config;
 });
 
@@ -35,26 +41,14 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
+      console.error('[API] 401 Error - Invalid/Expired token');
       useAuthStore.getState().logout();
-      try {
-        localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
-      } catch {}
-      // Redirect فقط اگر در صفحات محافظت‌شده هستیم
-      const protectedRoutes = ['/dashboard', '/profile', '/assessments', '/consultation', '/content', '/chat'];
-      const isHashRouter = typeof window !== 'undefined' && !!window.location.hash && window.location.hash.startsWith('#/');
-      const currentPath = isHashRouter ? window.location.hash.slice(1) : window.location.pathname;
-
-      if (protectedRoutes.some(route => currentPath.startsWith(route))) {
-        if (isHashRouter) {
-          window.location.hash = '#/login';
-        } else {
-          window.location.href = '/login';
-        }
-      } else if (window.location.pathname !== '/login') {
+      
+      if (window.location.pathname !== '/login') {
         window.location.replace('/login?session_expired=true');
       }
     }
+    
     return Promise.reject(error);
   }
 );
